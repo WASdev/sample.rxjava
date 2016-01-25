@@ -1,0 +1,5 @@
+task clean << {
+    ant.delete(includeemptydirs: 'true') {
+        fileset(dir: 'servers', includes: '**/logs/**, **/apps/*, **/workarea/**')
+    }
+}

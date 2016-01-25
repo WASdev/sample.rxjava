@@ -1,0 +1,116 @@
+apply plugin: 'war'
+apply plugin: 'eclipse-wtp'
+apply plugin: 'maven-publish'
+
+// Use the Liberty Gradle plugin to run our functional tests
+apply plugin: 'liberty'
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'Sonatype Nexus Snapshots'
+            url = 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+    }
+    dependencies {
+        classpath 'net.wasdev.wlp.gradle.plugins:liberty-gradle-plugin:1.0'
+    }
+}
+
+// Dependencies
+repositories { mavenCentral(); }
+
+dependencies {
+    compile group:'io.reactivex', name:'rxjava', version:'1.1.0'
+    providedCompile group:'javax.websocket', name:'javax.websocket-api', version:'1.1'
+    providedCompile group:'javax.enterprise.concurrent', name:'javax.enterprise.concurrent-api', version:'1.0'
+    providedCompile group:'javax.json', name:'javax.json-api', version:'1.0'
+    testCompile 'junit:junit:4.12'
+    testRuntime 'org.eclipse.jetty.websocket:javax-websocket-client-impl:9.2.13.v20150730'
+    testRuntime 'org.glassfish:javax.json:1.0.4'
+}
+
+sourceCompatibility = 1.8
+
+// Set the Eclipse facets to use 3.1 of the Dynamic Web Module which requires Java 1.7 by default.
+eclipse.wtp.facet {
+    // Clear default facets to work around bug where you get duplicates including wst 2.4
+    facets = []
+    facet name: 'jst.java', type: 'fixed'
+    facet name: 'jst.web', type: 'fixed'
+    facet name: 'jst.web', version: '3.1'
+    facet name: 'jst.java', version: '1.8'
+}
+
+// Copy WAR into the local usr dir
+task publishWar(dependsOn: 'jar', type: Copy) {
+    from(war)
+    into('../rxjava-wlpcfg/servers/rxjavaSample/apps')
+}
+
+publishing {
+    publications {
+        mavenWar(MavenPublication) {
+            version '1.0-SNAPSHOT'
+            groupId 'net.wasdev.wlp.sample'
+            artifactId 'rxjava'
+            
+            from components.web
+        }
+    }
+}
+
+// Add a functional test task that runs during the 'check' phase that uses the Liberty Gradle plugin
+// to launch Liberty and run the test classes in the fvt source set
+task fvt(type: Test, dependsOn: publishWar) {
+    group 'Verification'
+    description 'Runs the functional verification tests.'
+    reports.html.destination = file("$buildDir/reports/fvt")
+    reports.junitXml.destination = file("$buildDir/test-results/fvt")
+    include '**/fvt/**'
+    exclude '**/unit/**'
+    systemProperties = ['liberty.test.port': getHttpPort()]
+    dependsOn libertyStart
+    finalizedBy libertyStop
+}
+
+test {
+	reports.html.destination = file("$buildDir/reports/unit")
+	reports.junitXml.destination = file("$buildDir/test-results/unit")
+	include '**/unit/**'
+	exclude '**/fvt/**'
+}
+
+String getHttpPort() {
+    def DEFAULT_HTTP_PORT = 9080
+    def serverXmlFile = file(new File('../rxjava-wlpcfg/servers/rxjavaSample/server.xml'))
+    def portPattern = ~/.*httpPort="(\d+)".*/
+    serverXmlFile.eachLine { line -> 
+        def portMatcher = line =~ portPattern
+        if (portMatcher) {
+            return portMatcher.group(1)
+        }
+    }
+    return DEFAULT_HTTP_PORT
+}
+
+liberty {
+    installDir = owner.hasProperty('libertyRoot') ? "${libertyRoot}" : null
+    serverName = 'rxjavaSample'
+    userDir = '../rxjava-wlpcfg'
+    clean = true
+    install {
+        type = "javaee7"
+    }
+}
+
+assemble.dependsOn('publishWar')
+
+// If libertyRoot is not set, automatically download & install Liberty runtime
+if (!hasProperty('libertyRoot')) {
+    fvt.dependsOn('installLiberty')
+}
+
+// Run FVT by default
+check.dependsOn fvt
