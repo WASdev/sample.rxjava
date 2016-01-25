@@ -1,6 +1,13 @@
-# Java EE7: WebSockets
+# RxJava with Liberty
 
-This sample contains a WebSockets endpoint that used the RxJava APIs. It goes hand-in-hand with the [Introduction to using RxJava with WebSphere Liberty] (http://www.slideshare.net/wasdevnet/introduction-to-websockets-51912798) article published on WASdev.
+This sample contains a WebSockets endpoint that used the RxJava APIs. It goes hand-in-hand with the [Introduction to using RxJava with WebSphere Liberty] (TBD) article published on WASdev.
+
+* Building and running this sample:
+    * on the [command line](/docs/Using-cmd-line.md)
+    * using [Eclipse and WebSphere Developer Tools](/docs/Using-WDT.md)
+* [Downloading WAS Liberty](/docs/Downloading-WAS-Liberty.md)
+
+Once the server has been started, go to http://localhost:9082/12-factor-application/ to view the sample locally or the route of your application to view the sample being hosted on Bluemix.
 
 ## Notice
 
