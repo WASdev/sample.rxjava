@@ -1,6 +1,6 @@
 # RxJava with Liberty
 
-This sample contains a WebSockets endpoint that used the RxJava APIs. It goes hand-in-hand with the [Introduction to using RxJava with WebSphere Liberty] (TBD) article published on WASdev.
+This sample contains a WebSockets endpoint that used the RxJava APIs. It goes hand-in-hand with the [Introduction to using RxJava with WebSphere Liberty] (https://developer.ibm.com/wasdev/docs/introduction-to-using-rxjava-with-websphere-liberty/) article published on WASdev.
 
 * Building and running this sample:
     * on the [command line](/docs/Using-cmd-line.md)
